@@ -1,8 +1,10 @@
+
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import ResourcePage from './pages/ResourcePage.jsx';
+import ReportsPage from './pages/ReportsPage.jsx';
 
 const resourcePages = [
   { path: 'laboratories', title: 'Laboratories', singular: 'laboratory', description: 'Manage laboratory locations and their details.', icon: 'building' },
@@ -19,8 +21,10 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
+
       <Route element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
+
         {resourcePages.map((resource) => (
           <Route
             key={resource.path}
@@ -28,7 +32,10 @@ export default function App() {
             element={<ResourcePage resource={resource} />}
           />
         ))}
+
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

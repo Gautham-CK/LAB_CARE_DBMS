@@ -1,6 +1,9 @@
+
 import axios from 'axios';
 
-const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+const baseURL = (
+  import.meta.env.VITE_API_URL || 'http://localhost:5000'
+).replace(/\/+$/, '');
 
 export const api = axios.create({
   baseURL,
@@ -8,16 +11,13 @@ export const api = axios.create({
   timeout: 10000,
 });
 
-export class BackendApiUnavailableError extends Error {
-  constructor(resource) {
-    super(`The backend does not currently expose an API for ${resource}.`);
-    this.name = 'BackendApiUnavailableError';
-    this.resource = resource;
-  }
-}
-
 export async function getBackendHealth() {
   const response = await api.get('/');
+  return response.data;
+}
+
+export async function getDashboard() {
+  const response = await api.get('/api/reports/dashboard');
   return response.data;
 }
 
@@ -26,19 +26,37 @@ export async function registerUser(payload) {
   return response.data;
 }
 
-export const resourcesApi = {
-  laboratories: unavailableResource('laboratories'),
-  equipment: unavailableResource('equipment'),
-  categories: unavailableResource('equipment categories'),
-  complaints: unavailableResource('complaints'),
-  assignments: unavailableResource('technician assignments'),
-  repairs: unavailableResource('repair records'),
-  maintenance: unavailableResource('maintenance records'),
-};
+function createResourceApi(endpoint) {
+  return {
+    async list() {
+      const response = await api.get(endpoint);
+      return response.data;
+    },
 
-function unavailableResource(resource) {
-  const unavailable = async () => {
-    throw new BackendApiUnavailableError(resource);
+    async create(payload) {
+      const response = await api.post(endpoint, payload);
+      return response.data;
+    },
+
+    async update(id, payload) {
+      const response = await api.put(`${endpoint}/${id}`, payload);
+      return response.data;
+    },
+
+    async remove(id) {
+      const response = await api.delete(`${endpoint}/${id}`);
+      return response.data;
+    },
   };
-  return { list: unavailable, create: unavailable, update: unavailable, remove: unavailable };
 }
+
+export const resourcesApi = {
+  laboratories: createResourceApi('/api/labs'),
+  equipment: createResourceApi('/api/equipment'),
+  categories: createResourceApi('/api/categories'),
+  users: createResourceApi('/api/users'),
+  complaints: createResourceApi('/api/complaints'),
+  assignments: createResourceApi('/api/assignments'),
+  repairs: createResourceApi('/api/repairs'),
+  maintenance: createResourceApi('/api/maintenance'),
+};
